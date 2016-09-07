@@ -9,9 +9,9 @@ Implementation of simple PHP programs.
 
 ### Installation
 
+- `sudo apt install php-mbstring`
 - `git clone git@github.com/asgaines/simple_programs.git`
 - `cd simple_php_programs/`
-- `sudo apt install php-mbstring`
 
 ## Web Scraper
 
