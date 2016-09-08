@@ -7,21 +7,43 @@
  * processing intensive.
  */
 
-$subscribers = [];
-$unsubscribed = [];
-$bounced = [];
 
-foreach (['subscribers', 'unsubscribed', 'bounced'] as $list)
-	foreach (file('emails/' . $list . '.txt') as $email) {
-		$email = strtolower(trim($email));
-		if (filter_var($email, FILTER_VALIDATE_EMAIL))
-			if (!in_array($email, $$list))
-				$$list[] = $email;
+class SubscriptionManager
+{
+	public $subscribers = [];
+	public $unsubscribed = [];
+	public $bounced = [];
+
+	public function __construct()
+	{
+		$this->loadEmails();
+		$this->filterInvalidEmails();
 	}
 
-$subscribers = array_diff($subscribers, $unsubscribed); // Remove unsubscribed
-$subscribers = array_diff($subscribers, $bounced); // Remove bounced
+	public function printSubscribers()
+	{
+		foreach ($this->subscribers as $email)
+			echo $email . PHP_EOL;
+	}
 
-foreach ($subscribers as $s)
-	echo $s . PHP_EOL;
+	private function loadEmails()
+	{
+		foreach (['subscribers', 'unsubscribed', 'bounced'] as $list)
+			foreach (file('emails/' . $list . '.txt') as $email) {
+				$email = strtolower(trim($email));
+				if (filter_var($email, FILTER_VALIDATE_EMAIL))
+					if (!in_array($email, $this->$list))
+						$this->$list[] = $email;
+			}
+	}
+
+	private function filterInvalidEmails()
+	{
+		$this->subscribers = array_diff($this->subscribers, $this->unsubscribed); // Remove unsubscribed
+		$this->subscribers = array_diff($this->subscribers, $this->bounced); // Remove bounced
+	}
+}
+
+$subscriptionManager = new SubscriptionManager();
+$subscriptionManager->printSubscribers();
 

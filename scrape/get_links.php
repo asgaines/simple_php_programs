@@ -7,26 +7,53 @@
 
 include_once('simplehtmldom_1_5/simple_html_dom.php');
 
-$webPageUrl = $argv[1];
+class LinkRetriever
+{
+	public function __construct($url)
+	{
+		$this->url = $url;
+	}
 
-try {
-	$html = file_get_html($webPageUrl);
-} catch (Exception $e) {
-	echo $e->message;
-	die();
+	public function printLinks()
+	{
+		foreach ($this->getLinks() as $name => $url)
+			echo $name . ' [' . $url . ']' . PHP_EOL;
+	}
+
+	public function getLinks()
+	{
+		$links = [];
+		foreach ($this->getATags() as $a) {
+			$linkText = $this->cleanLink($a->plaintext);
+			if (!in_array($linkText, $links))
+				if (!empty($a->href))
+					$links[$linkText] = $a->href;
+		}
+
+		return $links;
+	}
+
+	private function cleanLink($link)
+	{
+		return trim(preg_replace('/\s\s+/', ' ', $link));
+	}
+
+	private function getATags()
+	{
+		try {
+			return file_get_html($this->url)->find('a');
+		} catch (Exception $e) {
+			echo $e->message;
+			die();
+		}
+	}
 }
 
-$links = [];
+$url = $argv[1];
 
-foreach($html->find('a') as $a) {
-	// Remove whitespace and linebreaks
-	$linkName = trim(preg_replace('/\s\s+/', ' ', $a->plaintext));
-	if (!in_array($linkName, $links)) // No duplicate urls
-		if (!empty($a->href)) // Only links
-			$links[$linkName] = $a->href;
-}
+if (!filter_var($url, FILTER_VALIDATE_URL))
+	die('The provided url is not valid');
 
-foreach ($links as $name => $url)
-	echo $name . ' [' . $url . ']' . PHP_EOL;
+$retriever = new LinkRetriever($argv[1]);
+$retriever->printLinks();
 
-?>
